@@ -3,6 +3,8 @@ from fastapi import FastAPI, Response, status, HTTPException
 from fastapi.params import Body
 from pydantic import BaseModel
 from random import randrange
+import psycopg2
+from psycopg2.extras import RealDictCursor
 
 app = FastAPI()
 
@@ -11,6 +13,12 @@ class Post(BaseModel):
     content: str
     published: bool = True
     rating: Optional[int] = None
+
+try:
+    conn = psycopg2.connect(host = 'localhost', database='api_development', user='', password='', cursor_factory=RealDictCursor)
+    cursor = conn.cursor()
+except Exception as error:
+    print(error)
 
 my_posts = []
 
