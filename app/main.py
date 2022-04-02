@@ -41,11 +41,35 @@ def get_posts():
     return {"data": posts}
 
 @app.post("/create-post")
-def create_post(newPost: Post):
-    post = newPost.dict()
-    post['id'] = randrange(0,1000000)
-    my_posts.append(post)
-    return {"data": post}
+def create_post(post: Post):
+    # post = newPost.dict()
+    # post['id'] = randrange(0,1000000)
+    # my_posts.append(post)
+    cursor.execute("""INSERT INTO posts (title, content, published) VALUES (%s, %s, %s) RETURNING * """, (post.title, post.content, post.published))
+    new_post = cursor.fetchone()
+    conn.commit()
+    return {"data": new_post}
+
+@app.delete("/posts/{id}")
+def delete_post(id: int):
+    cursor.execute("""DELETE FROM posts WHERE id = %s RETURNING *""", (str(id),))
+    deleted_post = cursor.fetchone()
+    conn.commit()
+
+    if deleted_post == None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"post does not exist")
+    
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+@app.put("/posts/{id}")
+def update_post(id: int, post: Post):
+    cursor.execute("""UPDATE posts SET title = %s, content = %s, published = %s WHERE id = %s RETURNING *""", (post.title, post.content, post.published, str(id),))
+    updated_post = cursor.fetchone()
+    conn.commit()
+
+    if updated_post == None:
+        raise HTTPException (status_code =  status.HTTP_404_NOT_FOUND, detail = f"post doest not exist")
+    return {"data": updated_post}
 
 @app.get("/posts/{id}")
 def get_post(id: int, response: Response):
