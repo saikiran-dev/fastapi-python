@@ -4,6 +4,7 @@ from fastapi.params import Body
 from pydantic import BaseModel
 from random import randrange
 import psycopg2
+import time
 from psycopg2.extras import RealDictCursor
 
 app = FastAPI()
@@ -15,10 +16,12 @@ class Post(BaseModel):
     rating: Optional[int] = None
 
 try:
-    conn = psycopg2.connect(host = 'localhost', database='api_development', user='', password='', cursor_factory=RealDictCursor)
+    conn = psycopg2.connect(host = 'localhost', database='', user='', password='', cursor_factory=RealDictCursor)
     cursor = conn.cursor()
+    print("database is connected")
 except Exception as error:
     print(error)
+    time.sleep(2)
 
 my_posts = []
 
@@ -33,7 +36,9 @@ def root():
 
 @app.get("/posts")
 def get_posts():
-    return {"data": my_posts}
+    cursor.execute("""SELECT * FROM posts""")
+    posts = cursor.fetchall()
+    return {"data": posts}
 
 @app.post("/create-post")
 def create_post(newPost: Post):
